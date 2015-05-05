@@ -60,7 +60,7 @@ func initConfig() error {
 
 	// Update config from the TOML configuration file.
 	if configFile == "" {
-		log.Warning("Skipping config file parsing")
+		log.Info("Skipping config file parsing")
 	} else {
 		log.WithField("file", configFile).Info("Loading config")
 
