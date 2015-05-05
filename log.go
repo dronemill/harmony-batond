@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 // Formatter is the log message formatter
@@ -14,7 +14,7 @@ type logFormatter struct {
 }
 
 // Format a log entry
-func (c *logFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (c *logFormatter) Format(entry *log.Entry) ([]byte, error) {
 	timestamp := time.Now().Format(time.RFC3339)
 	hostname, _ := os.Hostname()
 	return []byte(fmt.Sprintf("%s %s %s[%d]: %s %s\n", timestamp, hostname, logTag, os.Getpid(), strings.ToUpper(entry.Level.String()), entry.Message)), nil
@@ -26,7 +26,7 @@ var logTag string
 
 func init() {
 	logTag = os.Args[0]
-	// logrus.SetFormatter(&Formatter{})
+	// log.SetFormatter(&Formatter{})
 }
 
 // LogSetTag sets the tag.
@@ -36,9 +36,9 @@ func LogSetTag(t string) {
 
 // LogSetLevel sets the log level. Valid levels are panic, fatal, error, warn, info and debug.
 func LogSetLevel(level string) {
-	lvl, err := logrus.ParseLevel(level)
+	lvl, err := log.ParseLevel(level)
 	if err != nil {
-		logrus.Fatal(fmt.Sprintf(`not a valid level: "%s"`, level))
+		log.Fatal(fmt.Sprintf(`not a valid level: "%s"`, level))
 	}
-	logrus.SetLevel(lvl)
+	log.SetLevel(lvl)
 }
