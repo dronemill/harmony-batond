@@ -15,6 +15,7 @@ var (
 	c struct {
 		logLevel   string
 		harmonyAPI string
+		dockerSock string
 	}
 
 	configFile        = ""
@@ -28,12 +29,19 @@ func init() {
 	flag.StringVar(&c.logLevel, "logLevel", "", "the level of messages to log")
 
 	flag.StringVar(&c.harmonyAPI, "harmonyAPI", "http://harmony.dev:4774", "the url to the Harmony API")
+	flag.StringVar(&c.dockerSock, "dockerSock", "/tmp/docker.sock", "Docker Daemon control socket")
 }
 
+// Config is the main config type
 type Config struct {
-	LogLevel string `toml:LogLevel`
+	// LogLevel main application loggin level
+	LogLevel string `toml:"LogLevel"`
 
-	HarmonyAPI string `toml:HarmonyAPI`
+	// HarmonyAPI url to the Harmony API
+	HarmonyAPI string `toml:"HarmonyAPI"`
+
+	// DockerSock is the path to the Docker Daemon control socket
+	DockerSock string `toml:"DockerSock"`
 }
 
 func initConfig() error {
@@ -47,6 +55,7 @@ func initConfig() error {
 	config = Config{
 		LogLevel:   "info",
 		HarmonyAPI: "http://harmony.dev:4774",
+		DockerSock: "/tmp/docker.sock",
 	}
 
 	// Update config from the TOML configuration file.
@@ -85,5 +94,7 @@ func setConfigFromFlag(f *flag.Flag) {
 
 	case "harmonyAPI":
 		config.HarmonyAPI = c.harmonyAPI
+	case "dockerSock":
+		config.DockerSock = c.dockerSock
 	}
 }
