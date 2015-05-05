@@ -18,4 +18,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	log.Info("Starting batond")
+
+	sanityCheck()
 }
