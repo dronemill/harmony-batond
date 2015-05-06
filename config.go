@@ -14,9 +14,12 @@ var (
 
 	c struct {
 		logLevel   string
-		harmonyAPI string
 		dockerSock string
-		machine    struct {
+		harmony    struct {
+			api       string
+			verifyssl bool
+		}
+		machine struct {
 			hostname string
 			name     string
 		}
@@ -32,8 +35,10 @@ func init() {
 	flag.BoolVar(&printVersion, "version", false, "print version and exit")
 	flag.StringVar(&c.logLevel, "logLevel", "", "the level of messages to log")
 
-	flag.StringVar(&c.harmonyAPI, "harmonyAPI", "http://harmony.dev:4774", "the url to the Harmony API")
 	flag.StringVar(&c.dockerSock, "dockerSock", "/tmp/docker.sock", "Docker Daemon control socket")
+
+	flag.StringVar(&c.harmony.api, "harmony.api", "http://harmony.dev:4774", "the url to the Harmony API")
+	flag.BoolVar(&c.harmony.verifyssl, "harmony.verifyssl", true, "verify ssl connections to the harmony api")
 
 	flag.StringVar(&c.machine.hostname, "machine.hostname", "my_host.name", "Harmony machine name")
 	flag.StringVar(&c.machine.name, "machine.name", "machine0", "Harmony machine name")
@@ -44,14 +49,23 @@ type Config struct {
 	// LogLevel main application loggin level
 	LogLevel string `toml:"LogLevel"`
 
-	// HarmonyAPI url to the Harmony API
-	HarmonyAPI string `toml:"HarmonyAPI"`
+	// Harmony is the main Harmony config
+	Harmony HarmonyConfig `toml:"Harmony"`
 
 	// DockerSock is the path to the Docker Daemon control socket
 	DockerSock string `toml:"DockerSock"`
 
 	// Machine holds the harmony machine configuration
 	Machine MachineConfig `toml:"Machine"`
+}
+
+// HarmonyConfig is the main Harmony config
+type HarmonyConfig struct {
+	// API url to the Harmony API
+	API string `toml:"API"`
+
+	// VerifySSL is wether ot not we are to verify the secure Harmony API connections
+	VerifySSL bool `toml:"VerifySSL"`
 }
 
 // MachineConfig holds the harmony machine configuration
@@ -79,8 +93,11 @@ func initConfig() error {
 	// Set defaults.
 	config = Config{
 		LogLevel:   "info",
-		HarmonyAPI: "http://harmony.dev:4774",
 		DockerSock: "/tmp/docker.sock",
+		Harmony: HarmonyConfig{
+			API:       "http://harmony.dev:4774",
+			VerifySSL: true,
+		},
 		Machine: MachineConfig{
 			Hostname: hostname,
 			Name:     "",
@@ -121,10 +138,13 @@ func setConfigFromFlag(f *flag.Flag) {
 	case "logLevel":
 		config.LogLevel = c.logLevel
 
-	case "harmonyAPI":
-		config.HarmonyAPI = c.harmonyAPI
 	case "dockerSock":
 		config.DockerSock = c.dockerSock
+
+	case "harmony.api":
+		config.Harmony.API = c.harmony.api
+	case "harmony.verifyssl":
+		config.Harmony.VerifySSL = c.harmony.verifyssl
 
 	case "machine.hostname":
 		config.Machine.Hostname = c.machine.hostname

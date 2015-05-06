@@ -17,8 +17,11 @@ func TestInitConfigDefaultConfig(t *testing.T) {
 	LogSetLevel("warning")
 	want := Config{
 		LogLevel:   "info",
-		HarmonyAPI: "http://harmony.dev:4774",
 		DockerSock: "/tmp/docker.sock",
+		Harmony: HarmonyConfig{
+			API:       "http://harmony.dev:4774",
+			VerifySSL: true,
+		},
 		Machine: MachineConfig{
 			Hostname: hostname,
 			Name:     "",
