@@ -23,14 +23,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// get the hostname
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	// check our sanity
 	sanityCheck()
 
-	log.WithField("hostname", hostname).Info("Starting batond")
+	log.WithFields(log.Fields{"machineName": config.Machine.Name, "machineHostname": config.Machine.Hostname}).Info("Starting batond")
 }

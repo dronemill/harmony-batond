@@ -11,6 +11,8 @@ func sanityCheck() {
 	log.Info("Running a sanity check")
 
 	sanityCheckDockerSockExists()
+	checkMachineHostname()
+	checkMachineName()
 }
 
 func sanityCheckDockerSockExists() {
@@ -19,4 +21,22 @@ func sanityCheckDockerSockExists() {
 		log.Fatalf("Docker Sock does not exist!: '%s' file not found", config.DockerSock)
 		return
 	}
+
+	log.Debug("Sanity of Docker Socket: sane")
+}
+
+func checkMachineHostname() {
+	if config.Machine.Hostname == "" {
+		log.Fatal("Machine Hostname not set")
+	}
+
+	log.Debug("Sanity of Machine Hostname: sane")
+}
+
+func checkMachineName() {
+	if config.Machine.Name == "" {
+		log.Fatal("Machine Name not set")
+	}
+
+	log.Debug("Sanity of Machine Name: sane")
 }
