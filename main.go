@@ -8,6 +8,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+var batond *Batond
+
 func main() {
 	// parse cli flags
 	flag.Parse()
@@ -27,4 +29,12 @@ func main() {
 	sanityCheck()
 
 	log.WithFields(log.Fields{"machineName": config.Machine.Name, "machineHostname": config.Machine.Hostname}).Info("Starting batond")
+
+	batond = &Batond{}
+	batond.harmonyConnect()
+	machine := batond.getMachine()
+
+	log.WithField("machineID", machine.ID).
+		WithField("name", config.Machine.Name).
+		Info("Using machine by name")
 }
