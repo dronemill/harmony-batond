@@ -19,7 +19,7 @@ func (b *Batond) harmonyConnect() error {
 		APIVerifySSL: config.Harmony.VerifySSL,
 	}
 
-	log.WithField("harmonyAPI", config.Harmony.API).Info("Attempting connection to HarmonyAPU")
+	log.WithField("harmonyAPI", config.Harmony.API).Info("Attempting connection to HarmonyAPI")
 
 	var err error
 	b.Harmony, err = harmonyclient.NewHarmonyClient(hconf)
