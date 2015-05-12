@@ -52,9 +52,7 @@ func (b *Batond) getMachineByName() *harmonyclient.Machine {
 	machine, err := b.Harmony.MachineByName(config.Machine.Name)
 	if err != nil {
 		// TODO: need to get some better error handling in here.. @pmccarren
-		log.WithField("name", config.Machine.Name).
-			WithField("error", err.Error()).
-			Fatal("Failed fetching machine by name")
+		log.WithField("name", config.Machine.Name).WithField("error", err.Error()).Fatal("Failed fetching machine by name")
 	}
 
 	return machine
@@ -71,8 +69,7 @@ func (b *Batond) createMachine() *harmonyclient.Machine {
 	machineResource, err := b.Harmony.MachinesAdd(machine)
 
 	if err != nil {
-		log.WithField("error", err.Error()).
-			Fatal("Failed creating machine")
+		log.WithField("error", err.Error()).Fatal("Failed creating machine")
 	}
 
 	return machineResource
@@ -96,18 +93,14 @@ func (b *Batond) checkContainerState(cID string) {
 	container, err := b.Harmony.Container(cID)
 	if err != nil {
 		// TODO: need to get some better error handling in here.. @pmccarren
-		log.WithField("containerID", cID).
-			WithField("error", err.Error()).
-			Fatal("Failed fetching container")
+		log.WithField("containerID", cID).WithField("error", err.Error()).Fatal("Failed fetching container")
 	}
 	log.WithField("containerID", container.ID).Info("Successfuly retreived Harmony container resource")
 
 	// check if the container is already created
 	exists, err := b.containerExists(container)
 	if err != nil {
-		log.WithField("containerID", cID).
-			WithField("error", err.Error()).
-			Fatal("Failed checking if container exists")
+		log.WithField("containerID", cID).WithField("error", err.Error()).Fatal("Failed checking if container exists")
 	}
 
 	// FIXME: need to handle the case wheere the container.CID is set, but the container does not actually exist
@@ -117,36 +110,24 @@ func (b *Batond) checkContainerState(cID string) {
 
 		// ensure image exists
 		if err := b.ensureImageExists(container.Image); err != nil {
-			log.WithField("containerID", cID).
-				WithField("image", container.Image).
-				WithField("error", err.Error()).
-				Fatal("Failed ensuring image exists")
+			log.WithField("containerID", cID).WithField("image", container.Image).WithField("error", err.Error()).Fatal("Failed ensuring image exists")
 		}
 
 		dkrContainer, err := b.createContainer(container)
 		if err != nil {
-			log.WithField("containerID", cID).
-				WithField("error", err.Error()).
-				Fatal("Failed creating container")
+			log.WithField("containerID", cID).WithField("error", err.Error()).Fatal("Failed creating container")
 		}
 
-		log.WithField("containerID", cID).
-			WithField("cID", dkrContainer.ID).
-			Info("Created container")
+		log.WithField("containerID", cID).WithField("cID", dkrContainer.ID).Info("Created container")
 
 		if err := b.Harmony.ContainersCIDUpdate(cID, dkrContainer.ID); err != nil {
-			log.WithField("containerID", cID).
-				WithField("cID", dkrContainer.ID).
-				WithField("error", err.Error()).
-				Fatal("Failed updating container")
+			log.WithField("containerID", cID).WithField("cID", dkrContainer.ID).WithField("error", err.Error()).Fatal("Failed updating container")
 		}
 
 		// manually set it here, so we dont have to refetch the container resource
 		container.CID = dkrContainer.ID
 
-		log.WithField("containerID", cID).
-			WithField("cID", dkrContainer.ID).
-			Info("Updated container cID")
+		log.WithField("containerID", cID).WithField("cID", dkrContainer.ID).Info("Updated container cID")
 	} else {
 		log.WithField("containerID", container.ID).WithField("cID", container.CID).Debug("Container already exists")
 	}
@@ -154,45 +135,27 @@ func (b *Batond) checkContainerState(cID string) {
 	// get the running state of the container
 	running, err := b.containerRunning(container)
 	if err != nil {
-		log.WithField("containerID", cID).
-			WithField("cID", container.CID).
-			WithField("error", err.Error()).
-			Fatal("Failed checking if container is running")
+		log.WithField("containerID", cID).WithField("cID", container.CID).WithField("error", err.Error()).Fatal("Failed checking if container is running")
 	}
 
-	log.WithField("containerID", cID).
-		WithField("cID", container.CID).
-		WithField("running", running).
-		Debug("Checked container running state")
+	log.WithField("containerID", cID).WithField("cID", container.CID).WithField("running", running).Debug("Checked container running state")
 
 	// if container is stopped, and should be running, start it
 	if !running && container.Enabled {
 		if err := b.startContainer(container); err != nil {
-			log.WithField("containerID", cID).
-				WithField("cID", container.CID).
-				WithField("error", err.Error()).
-				Fatal("Failed starting container")
+			log.WithField("containerID", cID).WithField("cID", container.CID).WithField("error", err.Error()).Fatal("Failed starting container")
 		}
 
-		log.WithField("containerID", cID).
-			WithField("cID", container.CID).
-			WithField("running", true).
-			Info("Started container")
+		log.WithField("containerID", cID).WithField("cID", container.CID).WithField("running", true).Info("Started container")
 	}
 
 	// if container is running, and should be stopped, stop it
 	if running && !container.Enabled {
 		if err := b.stopContainer(container); err != nil {
-			log.WithField("containerID", cID).
-				WithField("cID", container.CID).
-				WithField("error", err.Error()).
-				Fatal("Failed stopping container")
+			log.WithField("containerID", cID).WithField("cID", container.CID).WithField("error", err.Error()).Fatal("Failed stopping container")
 		}
 
-		log.WithField("containerID", cID).
-			WithField("cID", container.CID).
-			WithField("running", false).
-			Info("Stopped container")
+		log.WithField("containerID", cID).WithField("cID", container.CID).WithField("running", false).Info("Stopped container")
 	}
 }
 
@@ -202,11 +165,10 @@ func (b *Batond) ensureImageExists(name string) error {
 	imageID, err := b.dkrImageNameToId(name)
 
 	if err != nil {
-		log.WithField("image", name).
-			WithField("error", err.Error()).
-			Error("Failed checking if image is already pulled")
+		log.WithField("image", name).WithField("error", err.Error()).Error("Failed checking if image is already pulled")
 		return err
 	}
+
 	// FIXME this is not working
 	if imageID != "" {
 		log.WithField("image", name).
@@ -214,8 +176,7 @@ func (b *Batond) ensureImageExists(name string) error {
 		return nil
 	}
 
-	log.WithField("image", name).
-		Info("Pulling image")
+	log.WithField("image", name).Info("Pulling image")
 
 	var registry, image, tag string
 
@@ -254,9 +215,7 @@ func (b *Batond) ensureImageExists(name string) error {
 	err = dkr.PullImage(opts, auth)
 
 	if err != nil {
-		log.WithField("image", name).
-			WithField("error", err.Error()).
-			Error("Failed pulling image")
+		log.WithField("image", name).WithField("error", err.Error()).Error("Failed pulling image")
 		return err
 	}
 
@@ -295,9 +254,7 @@ func (b *Batond) containerExists(container *harmonyclient.Container) (bool, erro
 	// see if the container is already created
 	dkrContainer, err := dkr.InspectContainer(container.CID)
 	if err != nil {
-		log.WithField("containerID", container.ID).
-			WithField("error", err.Error()).
-			Fatal("Failed inspecting container")
+		log.WithField("containerID", container.ID).WithField("error", err.Error()).Fatal("Failed inspecting container")
 		return false, err
 	}
 
@@ -314,9 +271,7 @@ func (b *Batond) containerRunning(container *harmonyclient.Container) (bool, err
 	// see if the container is already created
 	dkrContainer, err := dkr.InspectContainer(container.CID)
 	if err != nil {
-		log.WithField("containerID", container.ID).
-			WithField("error", err.Error()).
-			Fatal("Failed inspecting container")
+		log.WithField("containerID", container.ID).WithField("error", err.Error()).Fatal("Failed inspecting container")
 		return false, err
 	}
 
@@ -325,8 +280,7 @@ func (b *Batond) containerRunning(container *harmonyclient.Container) (bool, err
 
 // createContainer will create a new docker container
 func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Container, error) {
-	log.WithField("containerID", container.ID).
-		Info("Creating container")
+	log.WithField("containerID", container.ID).Info("Creating container")
 
 	// setup some vars
 	var entryPoint, cmd, env []string
@@ -347,9 +301,7 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 	for i, eID := range container.ContainerEnvsIDs {
 		e, err := b.Harmony.ContainerEnv(eID)
 		if err != nil {
-			log.WithField("ContainerEnvID", eID).
-				WithField("error", err.Error()).
-				Fatalf("Failed retreiving env")
+			log.WithField("ContainerEnvID", eID).WithField("error", err.Error()).Fatalf("Failed retreiving env")
 		}
 
 		// TODO excape this better
@@ -359,9 +311,7 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 	hostConfig, err := b.containerHostConfig(container)
 
 	if err != nil {
-		log.WithField("ContainerID", container.ID).
-			WithField("error", err.Error()).
-			Fatalf("Failed building hostConfig")
+		log.WithField("ContainerID", container.ID).WithField("error", err.Error()).Fatalf("Failed building hostConfig")
 	}
 
 	dkrConfig := docker.Config{
@@ -385,16 +335,12 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 	c, err := dkr.CreateContainer(opts)
 
 	if err != nil {
-		log.WithField("containerID", container.ID).
-			WithField("error", err.Error()).
-			Error("Failed creating docker container")
+		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed creating docker container")
 
 		return nil, err
 	}
 
-	log.WithField("containerID", container.ID).
-		WithField("cID", c.ID).
-		Info("Created docker container")
+	log.WithField("containerID", container.ID).WithField("cID", c.ID).Info("Created docker container")
 
 	return c, nil
 }
@@ -407,9 +353,7 @@ func (b *Batond) containerHostConfig(container *harmonyclient.Container) (docker
 	for i, dID := range container.ContainerDnsIDs {
 		d, err := b.Harmony.ContainerDns(dID)
 		if err != nil {
-			log.WithField("ContainerDnsID", dID).
-				WithField("error", err.Error()).
-				Fatal("Failed retreiving container dns")
+			log.WithField("ContainerDnsID", dID).WithField("error", err.Error()).Fatal("Failed retreiving container dns")
 		}
 
 		dns[i] = d.Nameserver
@@ -420,16 +364,13 @@ func (b *Batond) containerHostConfig(container *harmonyclient.Container) (docker
 	for i, vID := range container.ContainerVolumesIDs {
 		v, err := b.Harmony.ContainerVolume(vID)
 		if err != nil {
-			log.WithField("ContainerVolumeID", vID).
-				WithField("error", err.Error()).
-				Fatal("Failed retreiving container volume")
+			log.WithField("ContainerVolumeID", vID).WithField("error", err.Error()).Fatal("Failed retreiving container volume")
 		}
 
 		binds[i] = fmt.Sprintf("%s:%s", v.PathHost, v.PathContainer)
 	}
 
-	log.WithField("containerID", container.ID).
-		Debug("Successfully built containerHostConfig")
+	log.WithField("containerID", container.ID).Debug("Successfully built containerHostConfig")
 
 	return docker.HostConfig{
 		Binds: binds,
@@ -441,16 +382,12 @@ func (b *Batond) containerHostConfig(container *harmonyclient.Container) (docker
 func (b *Batond) startContainer(container *harmonyclient.Container) error {
 	hostConfig, err := b.containerHostConfig(container)
 	if err != nil {
-		log.WithField("ContainerID", container.ID).
-			WithField("error", err.Error()).
-			Fatalf("Failed building hostConfig")
+		log.WithField("ContainerID", container.ID).WithField("error", err.Error()).Fatalf("Failed building hostConfig")
 	}
 
 	err = dkr.StartContainer(container.CID, &hostConfig)
 	if err != nil {
-		log.WithField("containerID", container.ID).
-			WithField("error", err.Error()).
-			Error("Failed starting container")
+		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed starting container")
 	}
 
 	return err
@@ -464,9 +401,7 @@ func (b *Batond) stopContainer(container *harmonyclient.Container) error {
 
 	err := dkr.StopContainer(container.CID, timeout)
 	if err != nil {
-		log.WithField("containerID", container.ID).
-			WithField("error", err.Error()).
-			Error("Failed stopping container")
+		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed stopping container")
 	}
 
 	return err
