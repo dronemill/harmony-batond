@@ -162,14 +162,13 @@ func (b *Batond) checkContainerState(cID string) {
 // ensureImageExists will make sure that we have an image pulled
 func (b *Batond) ensureImageExists(name string) error {
 	// get the image id
-	imageID, err := b.dkrImageNameToId(name)
+	imageID, err := b.dkrImageNameToID(name)
 
 	if err != nil {
 		log.WithField("image", name).WithField("error", err.Error()).Error("Failed checking if image is already pulled")
 		return err
 	}
 
-	// FIXME this is not working
 	if imageID != "" {
 		log.WithField("image", name).
 			Debug("Image is already pulled")
@@ -226,12 +225,17 @@ func (b *Batond) ensureImageExists(name string) error {
 }
 
 // dkrImageNameToID will convery an image name to the docker imageID
-func (b *Batond) dkrImageNameToId(name string) (string, error) {
+func (b *Batond) dkrImageNameToID(name string) (string, error) {
 	images, err := dkr.ListImages(docker.ListImagesOptions{})
 
 	if err != nil {
 		log.Error(err.Error())
 		return "", err
+	}
+
+	// if there isn't a defined tag, then we are referring to 'latest'
+	if !strings.Contains(name, ":") {
+		name = name + ":latest"
 	}
 
 	for _, i := range images {
