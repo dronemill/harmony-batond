@@ -254,6 +254,10 @@ func (b *Batond) containerExists(container *harmonyclient.Container) (bool, erro
 	// see if the container is already created
 	dkrContainer, err := dkr.InspectContainer(container.CID)
 	if err != nil {
+		if _, ok := err.(*docker.NoSuchContainer); ok {
+			return false, nil
+		}
+
 		log.WithField("containerID", container.ID).WithField("error", err.Error()).Fatal("Failed inspecting container")
 		return false, err
 	}
