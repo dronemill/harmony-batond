@@ -207,7 +207,7 @@ func (b *Batond) ensureImageExists(name string) error {
 			Error("Failed checking if image is already pulled")
 		return err
 	}
-
+	// FIXME this is not working
 	if imageID != "" {
 		log.WithField("image", name).
 			Debug("Image is already pulled")
@@ -329,10 +329,18 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 		Info("Creating container")
 
 	// setup some vars
-	var entryPoint, env []string
+	var entryPoint, cmd, env []string
 
-	entryPoint = make([]string, 1)
-	entryPoint[0] = container.EntryPoint
+	// set EntryPoint if exists
+	if container.EntryPoint != "" {
+		entryPoint = make([]string, 1)
+		entryPoint[0] = container.EntryPoint
+	}
+
+	// set Cmd if exists
+	if container.Cmd != "" {
+		cmd = strings.Split(container.Cmd, " ")
+	}
 
 	// compile the env
 	env = make([]string, len(container.ContainerEnvsIDs))
@@ -360,8 +368,12 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 		Hostname:   container.Hostname,
 		Env:        env,
 		Entrypoint: entryPoint,
+		Cmd:        cmd,
 		DNS:        hostConfig.DNS,
 		Image:      container.Image,
+		Tty:        container.Tty,
+		OpenStdin:  container.Interactive,
+		StdinOnce:  container.Interactive,
 	}
 
 	opts := docker.CreateContainerOptions{
