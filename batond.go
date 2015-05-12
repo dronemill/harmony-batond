@@ -15,27 +15,6 @@ type Batond struct {
 	Harmony *harmonyclient.Client
 }
 
-// maestroConnect will get a connected maestro client
-func (b *Batond) harmonyConnect() error {
-	hconf := harmonyclient.Config{
-		APIHost:      config.Harmony.API,
-		APIVersion:   "v1",
-		APIVerifySSL: config.Harmony.VerifySSL,
-	}
-
-	log.WithField("harmonyAPI", config.Harmony.API).Info("Attempting connection to HarmonyAPI")
-
-	var err error
-	b.Harmony, err = harmonyclient.NewHarmonyClient(hconf)
-
-	if err != nil {
-		// TODO: maybe like dont bomb out here.. @pmccarren
-		log.Fatalf("Failed connecting to the HarmonyAPI: %s", err.Error())
-	}
-
-	return nil
-}
-
 // getMachine will get the Harmony Machine
 func (b *Batond) getMachine() *harmonyclient.Machine {
 	// check if we already have a MachineID

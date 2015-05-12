@@ -14,6 +14,7 @@ var (
 
 	c struct {
 		logLevel   string
+		oneTime    bool
 		dockerSock string
 		harmony    struct {
 			api       string
@@ -33,8 +34,9 @@ var (
 func init() {
 	flag.StringVar(&configFile, "configFile", "", "the config file")
 	flag.BoolVar(&printVersion, "version", false, "print version and exit")
-	flag.StringVar(&c.logLevel, "logLevel", "", "the level of messages to log")
 
+	flag.StringVar(&c.logLevel, "logLevel", "", "the level of messages to log")
+	flag.BoolVar(&c.oneTime, "oneTime", false, "run once and exit (no event watching)")
 	flag.StringVar(&c.dockerSock, "dockerSock", "/tmp/docker.sock", "Docker Daemon control socket")
 
 	flag.StringVar(&c.harmony.api, "harmony.api", "http://harmony.dev:4774", "the url to the Harmony API")
@@ -48,6 +50,9 @@ func init() {
 type Config struct {
 	// LogLevel main application loggin level
 	LogLevel string `toml:"LogLevel"`
+
+	// OneTime is this a single run
+	OneTime bool `toml:"OneTime"`
 
 	// Harmony is the main Harmony config
 	Harmony HarmonyConfig `toml:"Harmony"`
@@ -93,6 +98,7 @@ func initConfig() error {
 	// Set defaults.
 	config = Config{
 		LogLevel:   "info",
+		OneTime:    false,
 		DockerSock: "/tmp/docker.sock",
 		Harmony: HarmonyConfig{
 			API:       "http://harmony.dev:4774",
@@ -137,6 +143,8 @@ func setConfigFromFlag(f *flag.Flag) {
 	switch f.Name {
 	case "logLevel":
 		config.LogLevel = c.logLevel
+	case "oneTime":
+		config.OneTime = c.oneTime
 
 	case "dockerSock":
 		config.DockerSock = c.dockerSock

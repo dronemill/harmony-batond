@@ -6,6 +6,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dronemill/harmony-client-go"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -32,6 +33,10 @@ func main() {
 
 	log.WithFields(log.Fields{"machineName": config.Machine.Name, "machineHostname": config.Machine.Hostname}).Info("Starting batond")
 
+	if !config.OneTime {
+		startEventListner()
+	}
+
 	var err error
 	endpoint := fmt.Sprintf("unix://%s", config.DockerSock)
 	dkr, err = docker.NewClient(endpoint)
@@ -41,8 +46,9 @@ func main() {
 			Fatal("Failed creating new Docker client")
 	}
 
-	batond = &Batond{}
-	batond.harmonyConnect()
+	batond = &Batond{
+		Harmony: harmonyClient(),
+	}
 	machine := batond.getMachine()
 
 	log.WithField("machineID", machine.ID).
@@ -52,4 +58,34 @@ func main() {
 	for _, cid := range machine.ContainerIDs {
 		batond.checkContainerState(cid)
 	}
+}
+
+func startEventListner() {
+	log.Info("Starting docker event listener")
+
+	// listener = &Listener{
+	// 	Harmony: harmonyClient(),
+	// }
+
+}
+
+// harmonyConnect will get a connected harmony client
+func harmonyClient() *harmonyclient.Client {
+	hconf := harmonyclient.Config{
+		APIHost:      config.Harmony.API,
+		APIVersion:   "v1",
+		APIVerifySSL: config.Harmony.VerifySSL,
+	}
+
+	log.WithField("harmonyAPI", config.Harmony.API).Info("Attempting connection to HarmonyAPI")
+
+	var err error
+	h, err := harmonyclient.NewHarmonyClient(hconf)
+
+	if err != nil {
+		// TODO: maybe like dont bomb out here.. @pmccarren
+		log.Fatalf("Failed connecting to the HarmonyAPI: %s", err.Error())
+	}
+
+	return h
 }
