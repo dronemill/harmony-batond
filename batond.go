@@ -11,8 +11,11 @@ import (
 
 // Batond is the main app contianer
 type Batond struct {
-	// hamrony client
+	// Harmony client
 	Harmony *harmonyclient.Client
+
+	// Docker client
+	Dkr *docker.Client
 }
 
 // getMachine will get the Harmony Machine
@@ -190,7 +193,7 @@ func (b *Batond) ensureImageExists(name string) error {
 	auth := docker.AuthConfiguration{}
 
 	// Pull the image
-	err = dkr.PullImage(opts, auth)
+	err = b.Dkr.PullImage(opts, auth)
 
 	if err != nil {
 		log.WithField("image", name).WithField("error", err.Error()).Error("Failed pulling image")
@@ -205,7 +208,7 @@ func (b *Batond) ensureImageExists(name string) error {
 
 // dkrImageNameToID will convery an image name to the docker imageID
 func (b *Batond) dkrImageNameToID(name string) (string, error) {
-	images, err := dkr.ListImages(docker.ListImagesOptions{})
+	images, err := b.Dkr.ListImages(docker.ListImagesOptions{})
 
 	if err != nil {
 		log.Error(err.Error())
@@ -235,7 +238,7 @@ func (b *Batond) containerExists(container *harmonyclient.Container) (bool, erro
 	}
 
 	// see if the container is already created
-	dkrContainer, err := dkr.InspectContainer(container.CID)
+	dkrContainer, err := b.Dkr.InspectContainer(container.CID)
 	if err != nil {
 		if _, ok := err.(*docker.NoSuchContainer); ok {
 			return false, nil
@@ -256,7 +259,7 @@ func (b *Batond) containerExists(container *harmonyclient.Container) (bool, erro
 // containerRunning will check if the container is running
 func (b *Batond) containerRunning(container *harmonyclient.Container) (bool, error) {
 	// see if the container is already created
-	dkrContainer, err := dkr.InspectContainer(container.CID)
+	dkrContainer, err := b.Dkr.InspectContainer(container.CID)
 	if err != nil {
 		log.WithField("containerID", container.ID).WithField("error", err.Error()).Fatal("Failed inspecting container")
 		return false, err
@@ -319,7 +322,7 @@ func (b *Batond) createContainer(container *harmonyclient.Container) (*docker.Co
 		HostConfig: &hostConfig,
 	}
 
-	c, err := dkr.CreateContainer(opts)
+	c, err := b.Dkr.CreateContainer(opts)
 
 	if err != nil {
 		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed creating docker container")
@@ -372,7 +375,7 @@ func (b *Batond) startContainer(container *harmonyclient.Container) error {
 		log.WithField("ContainerID", container.ID).WithField("error", err.Error()).Fatalf("Failed building hostConfig")
 	}
 
-	err = dkr.StartContainer(container.CID, &hostConfig)
+	err = b.Dkr.StartContainer(container.CID, &hostConfig)
 	if err != nil {
 		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed starting container")
 	}
@@ -386,7 +389,7 @@ func (b *Batond) stopContainer(container *harmonyclient.Container) error {
 	var timeout uint
 	timeout = 5
 
-	err := dkr.StopContainer(container.CID, timeout)
+	err := b.Dkr.StopContainer(container.CID, timeout)
 	if err != nil {
 		log.WithField("containerID", container.ID).WithField("error", err.Error()).Error("Failed stopping container")
 	}

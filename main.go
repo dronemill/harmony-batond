@@ -11,7 +11,6 @@ import (
 )
 
 var batond *Batond
-var dkr *docker.Client
 
 func main() {
 	// parse cli flags
@@ -37,16 +36,8 @@ func main() {
 		startEventListner()
 	}
 
-	var err error
-	endpoint := fmt.Sprintf("unix://%s", config.DockerSock)
-	dkr, err = docker.NewClient(endpoint)
-	if err != nil {
-		log.WithField("socket", config.DockerSock).
-			WithField("error", err.Error()).
-			Fatal("Failed creating new Docker client")
-	}
-
 	batond = &Batond{
+		Dkr:     dockerClient(),
 		Harmony: harmonyClient(),
 	}
 	machine := batond.getMachine()
@@ -88,4 +79,18 @@ func harmonyClient() *harmonyclient.Client {
 	}
 
 	return h
+}
+
+func dockerClient() *docker.Client {
+	log.WithField("dockerSock", config.DockerSock).Info("Attempting connection to Docker")
+
+	endpoint := fmt.Sprintf("unix://%s", config.DockerSock)
+	dkr, err := docker.NewClient(endpoint)
+	if err != nil {
+		log.WithField("dockerSock", config.DockerSock).
+			WithField("error", err.Error()).
+			Fatal("Failed creating new Docker client")
+	}
+
+	return dkr
 }
