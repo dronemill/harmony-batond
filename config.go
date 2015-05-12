@@ -40,8 +40,8 @@ func init() {
 	flag.StringVar(&c.harmony.api, "harmony.api", "http://harmony.dev:4774", "the url to the Harmony API")
 	flag.BoolVar(&c.harmony.verifyssl, "harmony.verifyssl", true, "verify ssl connections to the harmony api")
 
-	flag.StringVar(&c.machine.hostname, "machine.hostname", "my_host.name", "Harmony machine name")
-	flag.StringVar(&c.machine.name, "machine.name", "machine0", "Harmony machine name")
+	flag.StringVar(&c.machine.hostname, "machine.hostname", "", "Harmony machine name")
+	flag.StringVar(&c.machine.name, "machine.name", "", "Harmony machine name")
 }
 
 // Config is the main config type

@@ -6,9 +6,11 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
 )
 
 var batond *Batond
+var dkr *docker.Client
 
 func main() {
 	// parse cli flags
@@ -30,6 +32,15 @@ func main() {
 
 	log.WithFields(log.Fields{"machineName": config.Machine.Name, "machineHostname": config.Machine.Hostname}).Info("Starting batond")
 
+	var err error
+	endpoint := fmt.Sprintf("unix://%s", config.DockerSock)
+	dkr, err = docker.NewClient(endpoint)
+	if err != nil {
+		log.WithField("socket", config.DockerSock).
+			WithField("error", err.Error()).
+			Fatal("Failed creating new Docker client")
+	}
+
 	batond = &Batond{}
 	batond.harmonyConnect()
 	machine := batond.getMachine()
@@ -37,4 +48,8 @@ func main() {
 	log.WithField("machineID", machine.ID).
 		WithField("name", config.Machine.Name).
 		Info("Using machine by name")
+
+	for _, cid := range machine.ContainerIDs {
+		batond.checkContainerState(cid)
+	}
 }
