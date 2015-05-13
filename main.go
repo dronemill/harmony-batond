@@ -11,8 +11,12 @@ import (
 )
 
 var batond *Batond
+var listener *Listener
+var stopped chan bool
 
 func main() {
+	stopped = make(chan bool)
+
 	// parse cli flags
 	flag.Parse()
 
@@ -33,7 +37,7 @@ func main() {
 	log.WithFields(log.Fields{"machineName": config.Machine.Name, "machineHostname": config.Machine.Hostname}).Info("Starting batond")
 
 	if !config.OneTime {
-		startEventListner()
+		go startEventListner()
 	}
 
 	batond = &Batond{
@@ -49,15 +53,24 @@ func main() {
 	for _, cid := range machine.ContainerIDs {
 		batond.checkContainerState(cid)
 	}
+
+	<-stopped
+	log.Info("Shutting down batond...")
+}
+
+func stop() {
+	stopped <- true
 }
 
 func startEventListner() {
 	log.Info("Starting docker event listener")
 
-	// listener = &Listener{
-	// 	Harmony: harmonyClient(),
-	// }
+	listener = &Listener{
+		Dkr:     dockerClient(),
+		Harmony: harmonyClient(),
+	}
 
+	listener.Listen()
 }
 
 // harmonyConnect will get a connected harmony client
