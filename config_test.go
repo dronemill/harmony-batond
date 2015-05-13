@@ -24,8 +24,8 @@ func TestInitConfigDefaultConfig(t *testing.T) {
 			VerifySSL: true,
 		},
 		Maestro: MaestroConfig{
-			Host:      "harmony.dev",
-			EventPort: 4775,
+			Host:       "harmony.dev",
+			PortalPort: 4775,
 		},
 		Machine: MachineConfig{
 			Hostname: hostname,

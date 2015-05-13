@@ -21,8 +21,8 @@ var (
 			verifyssl bool
 		}
 		maestro struct {
-			host      string
-			eventPort int // the EventSocket port
+			host       string
+			portalPort int // the EventSocket port
 		}
 		machine struct {
 			hostname string
@@ -47,7 +47,7 @@ func init() {
 	flag.BoolVar(&c.harmony.verifyssl, "harmony.verifyssl", true, "verify ssl connections to the harmony api")
 
 	flag.StringVar(&c.maestro.host, "maestro.host", "harmony.dev", "the ip/hostname of the maestro")
-	flag.IntVar(&c.maestro.eventPort, "maestro.eventPort", 4775, "the port of the maestro's EventSocket server")
+	flag.IntVar(&c.maestro.portalPort, "maestro.portalPort", 4775, "the port of the maestro's EventSocket server")
 
 	flag.StringVar(&c.machine.hostname, "machine.hostname", "", "Harmony machine name")
 	flag.StringVar(&c.machine.name, "machine.name", "", "Harmony machine name")
@@ -88,8 +88,8 @@ type MaestroConfig struct {
 	// Host is the ip/hostname of the maestro
 	Host string `toml:"Host"`
 
-	// EventPort the port of the maestro's EventSocket server
-	EventPort int `toml:"EventPort"`
+	// PortalPort the port of the maestro's EventSocket server
+	PortalPort int `toml:"PortalPort"`
 }
 
 // MachineConfig holds the harmony machine configuration
@@ -124,8 +124,8 @@ func initConfig() error {
 			VerifySSL: true,
 		},
 		Maestro: MaestroConfig{
-			Host:      "harmony.dev",
-			EventPort: 4775,
+			Host:       "harmony.dev",
+			PortalPort: 4775,
 		},
 		Machine: MachineConfig{
 			Hostname: hostname,
@@ -179,8 +179,8 @@ func setConfigFromFlag(f *flag.Flag) {
 
 	case "maestro.host":
 		config.Maestro.Host = c.maestro.host
-	case "maestro.eventPort":
-		config.Maestro.EventPort = c.maestro.eventPort
+	case "maestro.portalPort":
+		config.Maestro.PortalPort = c.maestro.portalPort
 
 	case "machine.hostname":
 		config.Machine.Hostname = c.machine.hostname
