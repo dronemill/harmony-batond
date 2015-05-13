@@ -23,6 +23,10 @@ func TestInitConfigDefaultConfig(t *testing.T) {
 			API:       "http://harmony.dev:4774",
 			VerifySSL: true,
 		},
+		Maestro: MaestroConfig{
+			Host:      "harmony.dev",
+			EventPort: 4775,
+		},
 		Machine: MachineConfig{
 			Hostname: hostname,
 			Name:     "",

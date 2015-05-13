@@ -20,6 +20,10 @@ var (
 			api       string
 			verifyssl bool
 		}
+		maestro struct {
+			host      string
+			eventPort int // the EventSocket port
+		}
 		machine struct {
 			hostname string
 			name     string
@@ -42,6 +46,9 @@ func init() {
 	flag.StringVar(&c.harmony.api, "harmony.api", "http://harmony.dev:4774", "the url to the Harmony API")
 	flag.BoolVar(&c.harmony.verifyssl, "harmony.verifyssl", true, "verify ssl connections to the harmony api")
 
+	flag.StringVar(&c.maestro.host, "maestro.host", "harmony.dev", "the ip/hostname of the maestro")
+	flag.IntVar(&c.maestro.eventPort, "maestro.eventPort", 4775, "the port of the maestro's EventSocket server")
+
 	flag.StringVar(&c.machine.hostname, "machine.hostname", "", "Harmony machine name")
 	flag.StringVar(&c.machine.name, "machine.name", "", "Harmony machine name")
 }
@@ -57,6 +64,9 @@ type Config struct {
 	// Harmony is the main Harmony config
 	Harmony HarmonyConfig `toml:"Harmony"`
 
+	// Maestro contains the configuration to the maestro
+	Maestro MaestroConfig `toml:"Maestro"`
+
 	// DockerSock is the path to the Docker Daemon control socket
 	DockerSock string `toml:"DockerSock"`
 
@@ -71,6 +81,15 @@ type HarmonyConfig struct {
 
 	// VerifySSL is wether ot not we are to verify the secure Harmony API connections
 	VerifySSL bool `toml:"VerifySSL"`
+}
+
+// MaestroConfig contains the configuration to the maestro
+type MaestroConfig struct {
+	// Host is the ip/hostname of the maestro
+	Host string `toml:"Host"`
+
+	// EventPort the port of the maestro's EventSocket server
+	EventPort int `toml:"EventPort"`
 }
 
 // MachineConfig holds the harmony machine configuration
@@ -103,6 +122,10 @@ func initConfig() error {
 		Harmony: HarmonyConfig{
 			API:       "http://harmony.dev:4774",
 			VerifySSL: true,
+		},
+		Maestro: MaestroConfig{
+			Host:      "harmony.dev",
+			EventPort: 4775,
 		},
 		Machine: MachineConfig{
 			Hostname: hostname,
@@ -153,6 +176,11 @@ func setConfigFromFlag(f *flag.Flag) {
 		config.Harmony.API = c.harmony.api
 	case "harmony.verifyssl":
 		config.Harmony.VerifySSL = c.harmony.verifyssl
+
+	case "maestro.host":
+		config.Maestro.Host = c.maestro.host
+	case "maestro.eventPort":
+		config.Maestro.EventPort = c.maestro.eventPort
 
 	case "machine.hostname":
 		config.Machine.Hostname = c.machine.hostname
