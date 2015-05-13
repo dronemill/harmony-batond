@@ -6,13 +6,18 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dronemill/eventsocket-client-go"
 	"github.com/dronemill/harmony-client-go"
 	"github.com/fsouza/go-dockerclient"
 )
 
-var batond *Batond
-var listener *Listener
-var stopped chan bool
+var (
+	batond   *Batond
+	maestro  *Maestro
+	listener *Listener
+	machine  *harmonyclient.Machine
+	stopped  chan bool
+)
 
 func main() {
 	stopped = make(chan bool)
@@ -44,7 +49,9 @@ func main() {
 		Dkr:     dockerClient(),
 		Harmony: harmonyClient(),
 	}
-	machine := batond.getMachine()
+	machine = batond.getMachine()
+
+	go startMaestro()
 
 	log.WithField("machineID", machine.ID).
 		WithField("name", config.Machine.Name).
@@ -71,6 +78,15 @@ func startEventListner() {
 	}
 
 	listener.Listen()
+}
+
+func startMaestro() {
+	maestro = &Maestro{
+		Harmony: harmonyClient(),
+		Portal:  maestroPortal(),
+	}
+
+	maestro.portalEmitExistance()
 }
 
 // harmonyConnect will get a connected harmony client
@@ -106,4 +122,39 @@ func dockerClient() *docker.Client {
 	}
 
 	return dkr
+}
+
+func maestroPortal() *eventsocketclient.Client {
+	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).Info("Opening connection to Maestro Portal")
+
+	portal, err := eventsocketclient.NewClient(fmt.Sprintf("%s:%d", config.Maestro.Host, config.Maestro.PortalPort))
+	if err != nil {
+		log.WithField("maestro", config.Maestro.Host).
+			WithField("portalPort", config.Maestro.PortalPort).
+			WithField("error", err.Error()).
+			Fatal("Failed connecting to Maestro Portal")
+	}
+
+	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).Debug("DialingWS")
+
+	if err := portal.DialWs(); err != nil {
+		log.WithField("maestro", config.Maestro.Host).
+			WithField("portalPort", config.Maestro.PortalPort).
+			WithField("esID", portal.Id).
+			WithField("error", err.Error()).
+			Fatal("Failed dialingWS")
+	}
+
+	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).WithField("esID", portal.Id).Info("Successfully DialedWS")
+
+	portal.SetMaxMessageSize(5242880)    // 5MB
+	log.WithFields(log.Fields{"maestro": config.Maestro.Host,
+		"portalPort": config.Maestro.PortalPort,
+		"esID":       portal.Id,
+		"size":       5242880,
+	}).Debug("Set max message size")
+
+	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).WithField("esID", portal.Id).Info("Successfully connected to the Maestro Portal")
+
+	return portal
 }
