@@ -86,7 +86,9 @@ func startMaestro() {
 		Portal:  maestroPortal(),
 	}
 
-	maestro.portalEmitExistance()
+	maestro.PortalEmitExistance()
+	maestro.Suscribe()
+	maestro.PortalReceive()
 }
 
 // harmonyConnect will get a connected harmony client

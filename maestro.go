@@ -17,7 +17,8 @@ type Maestro struct {
 	Portal *eventsocketclient.Client
 }
 
-func (m *Maestro) portalReconnect() error {
+// PortalReconnect reconnects to the portal after closing connections
+func (m *Maestro) PortalReconnect() error {
 	err := m.Portal.Reconnect()
 
 	if err != nil {
@@ -31,7 +32,35 @@ func (m *Maestro) portalReconnect() error {
 	return nil
 }
 
-func (m *Maestro) portalReceive() error {
+// Suscribe to container events
+func (m *Maestro) Suscribe() {
+	go m.suscribeContainerUpdate()
+}
+
+// suscribeContainerUpdate will subscribe to, and handle events from batond-container-updated
+func (m *Maestro) suscribeContainerUpdate() {
+	containerUpdateChan, err := m.Portal.Suscribe("batond-container-updated")
+
+	if err != nil {
+		log.WithField("error", err.Error()).
+			WithField("event", "batond_boot").
+			Fatal("Failed suscribing to event")
+	}
+	log.WithField("event", "batond_boot").
+		Info("Suscribed to event")
+
+	for {
+		select {
+		case msg := <-containerUpdateChan:
+			m.handleContainerUpdate(msg)
+		}
+	}
+}
+
+// PortalReceive will handle incomming events from the portal
+func (m *Maestro) PortalReceive() error {
+	log.Info("Starting portal receive routine")
+
 	go m.Portal.Recv()
 
 	for {
@@ -49,7 +78,8 @@ func (m *Maestro) portalReceive() error {
 	}
 }
 
-func (m *Maestro) portalEmitExistance() error {
+// PortalEmitExistance tells the portal about self
+func (m *Maestro) PortalEmitExistance() error {
 	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).Debug("Emitting existance")
 
 	p := eventsocketclient.NewPayload()
@@ -68,4 +98,13 @@ func (m *Maestro) portalEmitExistance() error {
 
 	log.WithField("maestro", config.Maestro.Host).WithField("portalPort", config.Maestro.PortalPort).Debug("Successfully emitted existance")
 	return nil
+}
+
+// handleContainerUpdate will update a changed container's state
+func (m *Maestro) handleContainerUpdate(r *eventsocketclient.Received) {
+	containerID := (*r.Message.Payload)["ContainerID"].(string)
+
+	log.WithField("maestro", config.Maestro.Host).WithField("containerID", containerID).Info("Hnalding batond-container-update")
+
+	fmt.Printf("\n\n>>> %s\n\n\n", containerID)
 }
