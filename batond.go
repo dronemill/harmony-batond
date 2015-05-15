@@ -16,6 +16,10 @@ type Batond struct {
 
 	// Docker client
 	Dkr *docker.Client
+
+	// chainContainerUpdate is a channel on which to receive
+	// containerIDs of updated containers
+	chanContainerUpdate chan string
 }
 
 // getMachine will get the Harmony Machine
@@ -55,6 +59,18 @@ func (b *Batond) createMachine() *harmonyclient.Machine {
 	}
 
 	return machineResource
+}
+
+// handleUpdatedContainers revc from the updatedContainer chan
+func (b *Batond) handleUpdatedContainers() {
+	log.Info("Ready to receive updated containers")
+
+	for {
+		select {
+		case cID := <-b.chanContainerUpdate:
+			b.checkContainerState(cID)
+		}
+	}
 }
 
 /**

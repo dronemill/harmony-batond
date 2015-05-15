@@ -45,20 +45,27 @@ func main() {
 		go startEventListner()
 	}
 
+	// setup a channel onwhich to trasnport updated containerIDs
+	containerUpdateChan := make(chan string)
+
 	batond = &Batond{
 		Dkr:     dockerClient(),
 		Harmony: harmonyClient(),
 	}
+	batond.chanContainerUpdate = containerUpdateChan
+
 	machine = batond.getMachine()
 
-	go startMaestro()
+	go batond.handleUpdatedContainers()
+	go startMaestro(containerUpdateChan)
 
 	log.WithField("machineID", machine.ID).
 		WithField("name", config.Machine.Name).
 		Info("Using machine by name")
 
 	for _, cid := range machine.ContainerIDs {
-		batond.checkContainerState(cid)
+		// batond.checkContainerState(cid)
+		containerUpdateChan <- cid
 	}
 
 	<-stopped
@@ -80,10 +87,11 @@ func startEventListner() {
 	listener.Listen()
 }
 
-func startMaestro() {
+func startMaestro(containerUpdateChan chan string) {
 	maestro = &Maestro{
 		Harmony: harmonyClient(),
 		Portal:  maestroPortal(),
+		batondChanContainerUpdate: containerUpdateChan,
 	}
 
 	maestro.PortalEmitExistance()

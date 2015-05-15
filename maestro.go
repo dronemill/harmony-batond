@@ -15,6 +15,10 @@ type Maestro struct {
 
 	// Portal is the Portal client instance
 	Portal *eventsocketclient.Client
+
+	// batondChanContainerUpdate is the channel on which to
+	// send updated containerIDs
+	batondChanContainerUpdate chan string
 }
 
 // PortalReconnect reconnects to the portal after closing connections
@@ -39,7 +43,8 @@ func (m *Maestro) Suscribe() {
 
 // suscribeContainerUpdate will subscribe to, and handle events from batond-container-updated
 func (m *Maestro) suscribeContainerUpdate() {
-	containerUpdateChan, err := m.Portal.Suscribe("batond-container-updated")
+	event := fmt.Sprintf("harmony.machine-%s.batond-container-updated", machine.ID)
+	containerUpdateChan, err := m.Portal.Suscribe(event)
 
 	if err != nil {
 		log.WithField("error", err.Error()).
@@ -104,7 +109,7 @@ func (m *Maestro) PortalEmitExistance() error {
 func (m *Maestro) handleContainerUpdate(r *eventsocketclient.Received) {
 	containerID := (*r.Message.Payload)["ContainerID"].(string)
 
-	log.WithField("maestro", config.Maestro.Host).WithField("containerID", containerID).Info("Hnalding batond-container-update")
+	log.WithField("maestro", config.Maestro.Host).WithField("containerID", containerID).Info("Handling batond-container-update")
 
-	fmt.Printf("\n\n>>> %s\n\n\n", containerID)
+	m.batondChanContainerUpdate <- containerID
 }
