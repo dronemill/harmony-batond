@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/dronemill/harmony-client-go"
 	"github.com/fsouza/go-dockerclient"
@@ -28,6 +26,9 @@ func (l *Listener) Listen() {
 
 	for {
 		v := <-c
-		fmt.Printf("%+v\n", v)
+		log.WithFields(log.Fields{
+			"CID":    v.ID,
+			"Status": v.Status,
+		}).Debug("Received docker event")
 	}
 }
